@@ -1,1 +1,6 @@
-client_id.txt
+*.env
+node_modules
+package-lock.json
+*.log
+*.gz
+.DS_Store*
