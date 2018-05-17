@@ -28,6 +28,7 @@
         <div id="oauth">
         </div>
         <button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
+		  <button class="btn btn-default" id="get-playlists">Get List of Playlists</button>
       </div>
     </div>
 
@@ -61,6 +62,9 @@
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+	 <script>
+		 USER_ID = -1;
+	 </script>
     <script>
       (function() {
 
@@ -109,6 +113,7 @@
                 },
                 success: function(response) {
                   userProfilePlaceholder.innerHTML = userProfileTemplate(response);
+						USER_ID = response.id;
 
                   $('#login').hide();
                   $('#loggedin').show();
@@ -132,6 +137,18 @@
                 access_token: access_token,
                 refresh_token: refresh_token
               });
+            });
+          }, false);
+
+          document.getElementById('get-playlists').addEventListener('click', function() {
+            $.ajax({
+              url: '/get_playlists',
+              data: {
+                'access_token': access_token,
+					 'user_id': USER_ID
+              }
+            }).done(function(data) {
+					alert(data);
             });
           }, false);
         }
