@@ -140,7 +140,8 @@ app.get('/refresh_token', function(req, res) {
 });
 
 app.get('/get_playlists', function(req, res) {
-	// requesting access token from refresh token
+	console.log("/get_playlists");
+
 	var access_token = req.query.access_token;
 	var user_id = req.query.user_id;
 
@@ -153,24 +154,106 @@ app.get('/get_playlists', function(req, res) {
 	// use the access token to access the Spotify Web API
 	request.get(options, function(error, response, body) {
 		if (!error && response.statusCode == 200) {
+			var playlist_array = [];
 			for (var i = 0; i < body.total; i++) {
 				var playlist = body.items[i];
 				if (playlist.owner.id == user_id) {
-					console.log(body.items[i].name);
+					var playlist_info = {
+						"name": body.items[i].name,
+						"id": body.items[i].id
+					};
+					playlist_array.push(playlist_info);
 				}
 			}
+			var playlist_json = {
+				"playlist": playlist_array
+			};
+
+			res.send(playlist_json);
 		} else {
 			console.log(error);
 			console.log(response.statusCode);
 		}
 	});
-	/*
-	 //parse data and send back
-	 res.send({
-	 'body': body
 });
-*/
+
+app.get('/get_songs', function(req, res) {
+	console.log("/get_songs?playlist_id=" + req.query.playlist_id);
+
+	var access_token = req.query.access_token;
+	var user_id = req.query.user_id;
+	var playlist_id = req.query.playlist_id;
+	var api_url = 'https://api.spotify.com/v1/users/' + user_id + '/playlists/' + playlist_id + '/tracks';
+
+	var options = {
+		url: api_url,
+		headers: { 'Authorization': 'Bearer ' + access_token },
+		json: true
+	};
+
+	//offset = 0, songlist is []	
+	var song_list = [];
+	song_list = getSongs(options, 0);
+	
 });
+
+
+function getSongs(options, offset, callback) {
+
+	var op = options;
+	options.url += "?offset=" + offset;
+	console.log(options.url);
+	request.get(options, function(error, response, body) {
+		if (!error && response.statusCode == 200) {
+
+			//if there is still more to recurse
+			var max = body.total - offset;
+			if (max > 100) {
+				song_list = getSongs(op, offset + 100, getSongs);
+				console.log("received list of " + song_list.length + " songs");
+				max = 100;
+			}
+
+			//iterate through first 100
+			var new_list = [];
+			for (var i = 0; i < max; i++) {
+				var track_info = body.items[i];
+
+				var song_name = track_info.track.name;
+				var song_id = track_info.track.id;
+				var song_artist = "";
+
+				var artist_info = track_info.track.artists;
+				for (var j = 0; j < artist_info.length; j++) {
+					song_artist += artist_info[j].name + ", ";
+				}
+				song_artist = song_artist.substring(0, song_artist.length - 2);
+
+				var song_info = {
+					"name": song_name,
+					"id": song_id,
+					"artist": song_artist
+				};
+				new_list.push(song_info);
+
+				//console.log(song_name + " by " + song_artist + " id is " + song_id);
+			}
+
+			if (typeof song_list != 'undefined') {
+				for (var i = 0; i < song_list.length; i++) {
+					new_list.push(song_list[i]);
+				}
+			}
+
+			console.log("retuning list of " + new_list.length + " songs");
+			return new_list;
+			getSongs();
+		} else {
+			console.log(error);
+			console.log(response.statusCode);
+		}
+	});
+}
 
 console.log('Listening on 8888');
 app.listen(8888);

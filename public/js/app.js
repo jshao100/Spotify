@@ -26,6 +26,11 @@ USER_ID = -1;
 		oauthTemplate = Handlebars.compile(oauthSource),
 		oauthPlaceholder = document.getElementById('oauth');
 
+		//playlist 
+		var playlistSource = document.getElementById("playlist-template").innerHTML,
+		playlistTemplate = Handlebars.compile(playlistSource),
+		playlistPlaceholder = document.getElementById("playlist-left-nav");
+		
 		var params = getHashParams();
 
 		var access_token = params.access_token,
@@ -36,11 +41,12 @@ USER_ID = -1;
 			alert('There was an error during the authentication');
 		} else {
 			if (access_token) {
-				// render oauth info
+				/* render oauth info
 				oauthPlaceholder.innerHTML = oauthTemplate({
 						access_token: access_token,
 						refresh_token: refresh_token
 				});
+				*/
 
 				$.ajax({
 						url: 'https://api.spotify.com/v1/me',
@@ -48,10 +54,13 @@ USER_ID = -1;
 							'Authorization': 'Bearer ' + access_token
 						},
 						success: function(response) {
-							userProfilePlaceholder.innerHTML = userProfileTemplate(response);
+							//userProfilePlaceholder.innerHTML = userProfileTemplate(response);
 							USER_ID = response.id;
 
 							$('#login').hide();
+
+							//load playlist information
+							document.getElementById('get-playlists').click()
 							$('#loggedin').show();
 						}
 				});
@@ -76,6 +85,7 @@ USER_ID = -1;
 				});
 			}, false);
 
+			//list playlists
 			document.getElementById('get-playlists').addEventListener('click', function() {
 				$.ajax({
 						url: '/get_playlists',
@@ -84,8 +94,28 @@ USER_ID = -1;
 							'user_id': USER_ID
 						}
 				}).done(function(data) {
-				alert(data);
-				});
+					playlistPlaceholder.innerHTML = playlistTemplate(data);
+					addSongListener(access_token);
+				})
 			}, false);
 		}
 })();
+
+function addSongListener(access_token) {
+	//get playlist songs
+	$(".get-songs").each(function() {
+		var playlist = this;
+		playlist.addEventListener('click', function() {
+			$.ajax({
+					url: '/get_songs',
+					data: {
+						'access_token': access_token,
+						'user_id': USER_ID,
+						'playlist_id': this.id
+					}
+			}).done(function(data) {
+				console.log(data);
+			}, false);
+		});
+	});
+}

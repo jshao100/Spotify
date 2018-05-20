@@ -17,10 +17,21 @@
 				</div>
 				<div id="oauth">
 				</div>
-				<button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
-				<button class="btn btn-default" id="get-playlists">Get List of Playlists</button>
+				<button class="hide btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
+				<button class="hide btn btn-default" id="get-playlists">Get List of Playlists</button>
+
+				<div id="playlist-left-nav">
+				</div>
 			</div>
 		</div>
+
+		<script id="playlist-template" type="text/x-handlebars-template">
+			<ul class="playlist-list">
+				{{#each playlist}}
+				<li><a class="get-songs" id={{this.id}}>{{this.name}}</a></li>
+				{{/each}}
+			</ul>
+		</script>
 
 		<script id="user-profile-template" type="text/x-handlebars-template">
 			<h1>Logged in as {{display_name}}</h1>
