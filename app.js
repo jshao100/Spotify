@@ -1,6 +1,7 @@
 //requires
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
+var rp = require('request-promise');
 var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
@@ -183,75 +184,63 @@ app.get('/get_songs', function(req, res) {
 	var access_token = req.query.access_token;
 	var user_id = req.query.user_id;
 	var playlist_id = req.query.playlist_id;
-	var api_url = 'https://api.spotify.com/v1/users/' + user_id + '/playlists/' + playlist_id + '/tracks';
+	var api_url = 'https://api.spotify.com/v1/users/' + user_id + 
+		'/playlists/' + playlist_id + 
+		'/tracks?fields=limit,previous,next,total,items(track(name,id,artists(name)))&offset=0';
 
-	var options = {
-		url: api_url,
-		headers: { 'Authorization': 'Bearer ' + access_token },
-		json: true
-	};
-
-	//offset = 0, songlist is []	
-	var song_list = [];
-	song_list = getSongs(options, 0);
-	
+	getSongs(api_url, access_token, function(result) {
+		console.log("complete");	
+	});
 });
 
+function getSongs(link, access_token, callback) {
+	var song_list = [];
+	var options = {
+		url: link,
+		headers: { 'Authorization': 'Bearer ' + access_token },
+		json: true,
+		async: false
+	};
+	var next = null;
 
-function getSongs(options, offset, callback) {
-
-	var op = options;
-	options.url += "?offset=" + offset;
-	console.log(options.url);
-	request.get(options, function(error, response, body) {
-		if (!error && response.statusCode == 200) {
-
-			//if there is still more to recurse
-			var max = body.total - offset;
-			if (max > 100) {
-				song_list = getSongs(op, offset + 100, getSongs);
-				console.log("received list of " + song_list.length + " songs");
-				max = 100;
-			}
-
-			//iterate through first 100
-			var new_list = [];
-			for (var i = 0; i < max; i++) {
-				var track_info = body.items[i];
-
-				var song_name = track_info.track.name;
-				var song_id = track_info.track.id;
-				var song_artist = "";
-
-				var artist_info = track_info.track.artists;
-				for (var j = 0; j < artist_info.length; j++) {
-					song_artist += artist_info[j].name + ", ";
-				}
-				song_artist = song_artist.substring(0, song_artist.length - 2);
-
-				var song_info = {
-					"name": song_name,
-					"id": song_id,
-					"artist": song_artist
-				};
-				new_list.push(song_info);
-
-				//console.log(song_name + " by " + song_artist + " id is " + song_id);
-			}
-
-			if (typeof song_list != 'undefined') {
-				for (var i = 0; i < song_list.length; i++) {
-					new_list.push(song_list[i]);
-				}
-			}
-
-			console.log("retuning list of " + new_list.length + " songs");
-			return new_list;
-			getSongs();
+	rp(options)
+	.then(function(body) {
+		var count = 100;
+		if (body.next == null) {
+			count = body.total % 100;
 		} else {
-			console.log(error);
-			console.log(response.statusCode);
+			next = body.next;
 		}
+
+		//parse body
+		for (var i = 0; i < count; i++) {
+			var track_info = body.items[i];
+
+			var song_name = track_info.track.name;
+			var song_id = track_info.track.id;
+			var song_artist = ""; 
+			var artist_info = track_info.track.artists;
+			for (var j = 0; j < artist_info.length; j++) {
+				song_artist += artist_info[j].name + ", ";
+			}
+			song_artist = song_artist.substring(0, song_artist.length - 2);
+
+			var song_info = {
+				"name": song_name,
+				"id": song_id,
+				"artist": song_artist
+			};
+			song_list.push(song_info);
+		}
+		console.log(song_list.length);
+		if (body.next != null) {
+			getSongs(body.next, access_token, callback);
+		} else {
+			callback();
+		}
+	})
+	.catch(function(err) {
+		console.log(err);
 	});
 }
 
