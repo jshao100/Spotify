@@ -143,6 +143,7 @@ function addPlaylistListener(access_token) {
 	});
 }
 
+//play song on click
 function addPlayListener(access_token) {
 	//get playlist songs
 	$(".play-song").each(function() {
@@ -157,11 +158,6 @@ function addPlayListener(access_token) {
 						'Content-Type': 'application/json',
 						'Authorization': `Bearer ${access_token}`
 					},
-			});
-
-			play({
-					playerInstance: new Spotify.Player({ name: "uh?" }),
-					spotify_uri: song_uri,
 			});
 		});
 	});
