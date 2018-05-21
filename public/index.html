@@ -22,15 +22,38 @@
 
 				<div id="playlist-left-nav">
 				</div>
+				
+				<div id="songlist">
+				</div>
+
 			</div>
 		</div>
 
 		<script id="playlist-template" type="text/x-handlebars-template">
 			<ul class="playlist-list">
 				{{#each playlist}}
-				<li><a class="get-songs" id={{this.id}}>{{this.name}}</a></li>
+				<li><a href="#" class="get-songs" id={{this.id}}>{{this.name}}</a></li>
 				{{/each}}
 			</ul>
+		</script>
+
+		<script id="songlist-template" type="text/x-handlebars-template">
+			<table>
+				<thead>
+					<tr>
+						<th width="50%">Name</th>
+						<th width="50%">Artist</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#each song}}
+					<tr>
+						<td><a href="#" id="{{this.id}}">{{this.name}}</a></td>
+						<td>{{this.artist}}</td>
+					</tr>
+					{{/each}}
+				</tbody>
+			</table>
 		</script>
 
 		<script id="user-profile-template" type="text/x-handlebars-template">

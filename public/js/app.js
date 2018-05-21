@@ -30,7 +30,7 @@ USER_ID = -1;
 		var playlistSource = document.getElementById("playlist-template").innerHTML,
 		playlistTemplate = Handlebars.compile(playlistSource),
 		playlistPlaceholder = document.getElementById("playlist-left-nav");
-		
+	
 		var params = getHashParams();
 
 		var access_token = params.access_token,
@@ -102,8 +102,14 @@ USER_ID = -1;
 })();
 
 function addSongListener(access_token) {
+
 	//get playlist songs
 	$(".get-songs").each(function() {
+		//song 
+		var songSource = document.getElementById("songlist-template").innerHTML,
+		songTemplate = Handlebars.compile(songSource),
+		songPlaceholder = document.getElementById("songlist");
+
 		var playlist = this;
 		playlist.addEventListener('click', function() {
 			$.ajax({
@@ -114,7 +120,7 @@ function addSongListener(access_token) {
 						'playlist_id': this.id
 					}
 			}).done(function(data) {
-				console.log(data);
+				songPlaceholder.innerHTML = songTemplate(data);
 			}, false);
 		});
 	});

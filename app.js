@@ -188,13 +188,19 @@ app.get('/get_songs', function(req, res) {
 		'/playlists/' + playlist_id + 
 		'/tracks?fields=limit,previous,next,total,items(track(name,id,artists(name)))&offset=0';
 
-	getSongs(api_url, access_token, function(result) {
-		console.log("complete");	
+	//getSongsCallback
+	getSongs(api_url, access_token, [], function(result) {
+		console.log("returning " + result.length + " songs for playlist id " + playlist_id);
+		
+		var song_json = {
+			"song": result
+		};
+		res.send(song_json);
 	});
 });
 
-function getSongs(link, access_token, callback) {
-	var song_list = [];
+function getSongs(link, access_token, song_list, callback) {
+	//var song_list = [];
 	var options = {
 		url: link,
 		headers: { 'Authorization': 'Bearer ' + access_token },
@@ -232,11 +238,11 @@ function getSongs(link, access_token, callback) {
 			};
 			song_list.push(song_info);
 		}
-		console.log(song_list.length);
+
 		if (body.next != null) {
-			getSongs(body.next, access_token, callback);
+			getSongs(body.next, access_token, song_list, callback);
 		} else {
-			callback();
+			callback(song_list);
 		}
 	})
 	.catch(function(err) {
