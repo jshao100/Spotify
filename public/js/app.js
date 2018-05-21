@@ -58,10 +58,10 @@ USER_ID = -1;
 							USER_ID = response.id;
 
 							$('#login').hide();
+							$('#loggedin').show();
 
 							//load playlist information
 							document.getElementById('get-playlists').click()
-							$('#loggedin').show();
 						}
 				});
 			} else {
@@ -112,6 +112,18 @@ function addSongListener(access_token) {
 
 		var playlist = this;
 		playlist.addEventListener('click', function() {
+			//remove class active and then add to clicked
+			$(".get-songs").each(function() {
+				this.className = "get-songs";
+			});
+			this.className += " active";
+
+			//remove old songs
+			var s = document.getElementById("songlist");
+			while (s.firstChild) {
+				s.removeChild(s.firstChild);
+			}
+			
 			$.ajax({
 					url: '/get_songs',
 					data: {
