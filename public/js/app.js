@@ -64,6 +64,9 @@ USER_ID = -1;
 							document.getElementById('get-playlists').click()
 						}
 				});
+
+				//initialize web player
+				var player = initializeWebPlayer(access_token);
 			} else {
 				// render initial screen
 				$('#login').show();
@@ -94,15 +97,14 @@ USER_ID = -1;
 							'user_id': USER_ID
 						}
 				}).done(function(data) {
-					playlistPlaceholder.innerHTML = playlistTemplate(data);
-					addSongListener(access_token);
+				playlistPlaceholder.innerHTML = playlistTemplate(data);
+				addSongListener(access_token);
 				})
 			}, false);
 		}
 })();
 
 function addSongListener(access_token) {
-
 	//get playlist songs
 	$(".get-songs").each(function() {
 		//song 
@@ -123,7 +125,7 @@ function addSongListener(access_token) {
 			while (s.firstChild) {
 				s.removeChild(s.firstChild);
 			}
-			
+
 			$.ajax({
 					url: '/get_songs',
 					data: {
@@ -133,7 +135,64 @@ function addSongListener(access_token) {
 					}
 			}).done(function(data) {
 				songPlaceholder.innerHTML = songTemplate(data);
+				addPlayListener(access_token);
 			}, false);
 		});
 	});
+}
+
+function addPlayListener(access_token) {
+	//get playlist songs
+	$(".play-song").each(function() {
+		var song = this;
+		song.addEventListener('click', function() {
+			var song_uri = "spotify:track:" + this.id;
+
+			fetch('https://api.spotify.com/v1/me/player/play', {
+					method: 'PUT',
+					body: JSON.stringify({ uris: [song_uri] }),
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${access_token}`
+					},
+			});
+
+			play({
+					playerInstance: new Spotify.Player({ name: "uh?" }),
+					spotify_uri: song_uri,
+			});
+		});
+	});
+}
+
+function initializeWebPlayer(access_token) {
+	//initialize web player
+	window.onSpotifyWebPlaybackSDKReady = () => {
+		const player = new Spotify.Player({
+				name: 'Thingy',
+				getOAuthToken: cb => { cb(access_token); }
+		});
+
+		// Error handling
+		player.addListener('initialization_error', ({ message }) => { console.error(message); });
+		player.addListener('authentication_error', ({ message }) => { console.error(message); });
+		player.addListener('account_error', ({ message }) => { console.error(message); });
+		player.addListener('playback_error', ({ message }) => { console.error(message); });
+
+		// Playback status updates
+		player.addListener('player_state_changed', state => { console.log(state); });
+
+		// Ready
+		player.addListener('ready', ({ device_id }) => {
+			console.log('Ready with Device ID', device_id);
+		});
+
+		// Not Ready
+		player.addListener('not_ready', ({ device_id }) => {
+			console.log('Device ID has gone offline', device_id);
+		});
+
+		// Connect to the player!
+		player.connect();
+	}
 }
