@@ -1,7 +1,7 @@
 $(document).foundation()
 
 USER_ID = -1;
-current_song_id = null;
+PLAYING = null;
 (function() {
 
 		/**
@@ -30,6 +30,14 @@ current_song_id = null;
 		var playlistSource = document.getElementById("playlist-template").innerHTML,
 		playlistTemplate = Handlebars.compile(playlistSource),
 		playlistPlaceholder = document.getElementById("playlist-left-nav");
+
+		//modal
+		var goodPlaceSource = document.getElementById("good-place-template").innerHTML,
+		badPlaceSource = document.getElementById("bad-place-template").innerHTML,
+		goodPlaceTemplate = Handlebars.compile(goodPlaceSource),
+		badPlaceTemplate = Handlebars.compile(badPlaceSource),
+		goodPlacePlaceholder = document.getElementById("good-place-placeholder");
+		badPlacePlaceholder = document.getElementById("bad-place-placeholder");
 	
 		var params = getHashParams();
 
@@ -98,8 +106,15 @@ current_song_id = null;
 				}).done(function(data) {
 					playlistPlaceholder.innerHTML = playlistTemplate(data);
 
+					goodPlacePlaceholder.innerHTML = goodPlaceTemplate(data);
+					badPlacePlaceholder.innerHTML = badPlaceTemplate(data);
+
+					//open options modal
+					$('#optionsModal').foundation('open');
+					updateOptions();
+
 					//check if any playlists are currently playing
-					checkCurrentPlayback(access_token);
+					//checkCurrentPlayback(access_token);
 
 					//add listeners to the songs
 					addPlaylistListener(access_token);
@@ -136,10 +151,34 @@ function addPlaylistListener(access_token) {
 						'playlist_id': this.id
 					}
 			}).done(function(data) {
-			songPlaceholder.innerHTML = songTemplate(data);
-			addPlayListener(access_token);
+				songPlaceholder.innerHTML = songTemplate(data);
+				addPlayListener(access_token);
 			}, false);
+
+			//play
+			playPlaylist(access_token, this.id);
+			window.setTimeout(function() {
+				checkCurrentPlayback(access_token);
+			}, 500);
+			window.clearInterval(PLAYING);
+			PLAYING = window.setInterval(function() {
+				checkCurrentPlayback(access_token);
+			}, 5000);
+			
 		});
+	});
+}
+
+function playPlaylist(access_token, playlist_id) {
+	var uri = "spotify:user:" + USER_ID + ":playlist:" + playlist_id;
+
+	fetch('https://api.spotify.com/v1/me/player/play', {
+			method: 'PUT',
+			body: JSON.stringify({ context_uri: uri }),
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${access_token}`
+			},
 	});
 }
 
@@ -202,12 +241,45 @@ function checkCurrentPlayback(access_token) {
 				'access_token': access_token
 			}
 	}).done(function(data) {
-		if (data.is_playing && data.playlist_id != null) {
-			$(".playing").removeClass("playing"); //remove all
-			document.getElementById(data.playlist_id).className += " playing"; //add class
-		}
 		if (data.is_playing) {
-			current_song_id = data.song_id;	
+			$(".play-song").each(function() {
+				this.className = this.className.replace("playing", "");
+				if (this.id == data.song_id) {
+					this.className += " playing";
+				}
+			});
 		}
 	}, false);
+}
+function setOptions() {
+	if (updateOptions()) {
+		$('#optionsModal').foundation('close');	
+	}
+}
+
+function updateOptions() {
+	var p = document.getElementById('good-playlist');
+	var g_playlist = p.options[p.selectedIndex].value;
+
+	p = document.getElementById('bad-playlist');
+	var b_playlist = p.options[p.selectedIndex].value;
+
+	$(".get-songs").each(function() {
+		this.className = this.className.replace("good-playlist","");
+		this.className = this.className.replace("bad-playlist","");
+	});
+
+	//if any of the selections are the same
+	if (g_playlist == b_playlist) {
+		$('#good-playlist option:eq(0)').prop('selected', true);
+		$('#bad-playlist option:eq(1)').prop('selected', true);
+		alert("Playlists cannot be the same");
+		return false;
+	} else {
+		$(".get-songs").each(function() {
+			if (this.id == g_playlist)	this.className += " good-playlist";
+			else if (this.id == b_playlist)	this.className += " bad-playlist";
+		});
+		return true;
+	}	
 }

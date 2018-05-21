@@ -30,6 +30,43 @@
 			</div>
 		</div>
 
+		<!-- Modal -->
+		<div class="reveal" id="optionsModal" data-reveal data-close-on-click="false" data-close-on-esc="false">
+			<div class="grid-x grid-padding-x">
+				<div id="good-place-placeholder" class="large-6 medium-6 columns nopadding"></div>
+				<div id="bad-place-placeholder" class="large-6 medium-6 columns nopadding"></div>
+				<div class="large-12 medium-12">
+					<a class="close-modal button" onclick="setOptions()">Save</a>
+				</div>
+			</div>
+		</div>
+
+		<script id="good-place-template" type="text/x-handlebars-template">
+			<h4>The Good Place</h4>
+			<select name="good_place" id="good-playlist">
+			{{#each playlist}}
+			{{#ifFirst @index}}
+			<option value={{this.id}} selected>{{this.name}}</option>
+			{{else}}
+			<option value={{this.id}}>{{this.name}}</option>	
+			{{/ifFirst}}
+			{{/each}}
+			</select>
+		</script>
+
+		<script id="bad-place-template" type="text/x-handlebars-template">
+			<h4>The Bad Place</h4>
+			<select name="bad_place" id="bad-playlist">
+			{{#each playlist}}
+			{{#ifSecond @index}}
+			<option value={{this.id}} selected>{{this.name}}</option>
+			{{else}}
+			<option value={{this.id}}>{{this.name}}</option>	
+			{{/ifSecond}}
+			{{/each}}
+			</select>
+		</script>
+
 		<script id="playlist-template" type="text/x-handlebars-template">
 			<ul class="playlist-list">
 				{{#each playlist}}
@@ -86,6 +123,31 @@
 		</script>
 
 		<script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+		<script>
+			Handlebars.registerHelper("ifThird", function (index, options) {
+				if(index == 2) {
+					return options.fn(this);
+				} else {
+					return options.inverse(this);
+				}
+			});
+
+			Handlebars.registerHelper("ifSecond", function (index, options) {
+				if(index == 1) {
+					return options.fn(this);
+				} else {
+					return options.inverse(this);
+				}
+			});
+
+			Handlebars.registerHelper("ifFirst", function (index, options) {
+				if(index == 0) {
+					return options.fn(this);
+				} else {
+					return options.inverse(this);
+				}
+			});
+		</script>
 		<script src="js/vendor/jquery.js"></script>
 		<script src="js/vendor/what-input.js"></script>
 		<script src="js/vendor/foundation.js"></script>

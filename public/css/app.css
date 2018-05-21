@@ -36,16 +36,50 @@
 	border-bottom: 1px solid black;
 	background-color: lightgrey;
 	color: black;
+	position: relative;
 }
 
-#playlist-left-nav a:hover,
+#playlist-left-nav a:hover::after,
+#playlist-left-nav a.selected::after {
+	color: black;
+	font-weight: bold;
+	font-size: 20px;
+	line-height: 50px;
+	right: 10px;
+	position: absolute;
+}
+
+#playlist-left-nav a:hover::after {
+	content: "▸";
+}
+
+#playlist-left-nav a.selected::after {
+	content: "\01F508" !important;
+}
+
 #playlist-left-nav a.selected {
-	background-color: grey;
+	background-color: yellow;
 	color: white;
 }
 
 #playlist-left-nav a.playing {
-	background-color: #1ed760 !important; //spotify green
+	color: green !important;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+#playlist-left-nav a.good-playlist {
+	background-color: green;
+	color: white;
+}
+
+#playlist-left-nav a.medium-playlist {
+	background-color: yellow;
+	color: white;
+}
+
+#playlist-left-nav a.bad-playlist {
+	background-color: red;
 	color: white;
 }
 
@@ -57,3 +91,71 @@
 #songlist {
 	overflow: auto;
 }
+
+#songlist .play-song.playing {
+	color: green;
+	text-decoration: underline;
+	font-weight: bold;
+}
+
+#optionsModal {
+	padding: 0;
+}
+
+#optionsModal:focus {
+	outline:none;
+}
+
+#optionsModal h4 {
+	font-size: 20px;
+	text-align: left;
+	padding-left: 5px;
+}
+
+#optionsModal #good-place-placeholder,
+#optionsModal #medium-place-placeholder,
+#optionsModal #bad-place-placeholder {
+	padding-right: 10px;
+	padding-left: 10px;
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+#optionsModal select {
+	background-color: transparent;
+	border: none;
+}
+
+#optionsModal #good-place-placeholder {
+	background-color: green;
+}
+
+#optionsModal #medium-place-placeholder {
+	background-color: yellow;
+}
+
+#optionsModal #bad-place-placeholder {
+	background-color: red;
+}
+
+#optionsModal .close-modal {
+	display: block;
+	text-align: center;
+	margin: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
