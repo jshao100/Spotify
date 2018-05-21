@@ -144,7 +144,14 @@ app.get('/refresh_token', function(req, res) {
 });
 
 app.get('/check_playback', function(req, res) {
-	console.log('/check_playback');
+	var type = req.query.type;
+	if (type == 'current') {
+		console.log('/check_playback?current');
+	} else if (type == 'pause') {
+		console.log('/check_playback?pause');
+	} else if (type == 'seek') {
+		console.log('/check_playback?seek');
+	}
 
 	var access_token = req.query.access_token;
 	var options = {
@@ -159,7 +166,8 @@ app.get('/check_playback', function(req, res) {
 			var playback = {
 				"is_playing": body.is_playing,
 				"playlist_id": null,
-				"song_id": null
+				"song_id": null, 
+				"progress_ms": null
 			};
 
 			//is_playing
@@ -170,6 +178,7 @@ app.get('/check_playback', function(req, res) {
 				}
 
 				playback.song_id = body.item.id; //get song info anyways
+				playback.progress_ms = body.progress_ms;
 			}
 
 			res.send(playback);

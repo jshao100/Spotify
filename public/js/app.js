@@ -2,6 +2,7 @@ $(document).foundation()
 
 USER_ID = -1;
 PLAYING = null;
+ACCESS_TOKEN = null;
 (function() {
 
 		/**
@@ -41,14 +42,14 @@ PLAYING = null;
 	
 		var params = getHashParams();
 
-		var access_token = params.access_token,
+		ACCESS_TOKEN = params.access_token,
 		refresh_token = params.refresh_token,
 		error = params.error;
 
 		if (error) {
 			alert('There was an error during the authentication');
 		} else {
-			if (access_token) {
+			if (ACCESS_TOKEN != null) {
 				/* render oauth info
 				oauthPlaceholder.innerHTML = oauthTemplate({
 						access_token: access_token,
@@ -56,10 +57,11 @@ PLAYING = null;
 				});
 				*/
 
+				//get playlist information
 				$.ajax({
 						url: 'https://api.spotify.com/v1/me',
 						headers: {
-							'Authorization': 'Bearer ' + access_token
+							'Authorization': 'Bearer ' + ACCESS_TOKEN
 						},
 						success: function(response) {
 							//userProfilePlaceholder.innerHTML = userProfileTemplate(response);
@@ -72,6 +74,16 @@ PLAYING = null;
 							document.getElementById('get-playlists').click()	
 						}
 				});
+
+				//shuffle off
+				fetch('https://api.spotify.com/v1/me/player/shuffle?state=false', {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${ACCESS_TOKEN}`
+					},
+				});
+
 				//initialize web player
 				//var player = initializeWebPlayer(access_token);
 			} else {
@@ -87,9 +99,9 @@ PLAYING = null;
 							'refresh_token': refresh_token
 						}
 				}).done(function(data) {
-				access_token = data.access_token;
+				ACCESS_TOKEN = data.access_token;
 				oauthPlaceholder.innerHTML = oauthTemplate({
-						access_token: access_token,
+						access_token: ACCESS_TOKEN,
 						refresh_token: refresh_token
 				});
 				});
@@ -100,7 +112,7 @@ PLAYING = null;
 				$.ajax({
 						url: '/get_playlists',
 						data: {
-							'access_token': access_token,
+							'access_token': ACCESS_TOKEN,
 							'user_id': USER_ID
 						}
 				}).done(function(data) {
@@ -113,17 +125,14 @@ PLAYING = null;
 					$('#optionsModal').foundation('open');
 					updateOptions();
 
-					//check if any playlists are currently playing
-					//checkCurrentPlayback(access_token);
-
 					//add listeners to the songs
-					addPlaylistListener(access_token);
+					addPlaylistListener();
 				})
 			}, false);
 		}
 })();
 
-function addPlaylistListener(access_token) {
+function addPlaylistListener() {
 	//get playlist songs
 	$(".get-songs").each(function() {
 		//song 
@@ -146,30 +155,30 @@ function addPlaylistListener(access_token) {
 			$.ajax({
 					url: '/get_songs',
 					data: {
-						'access_token': access_token,
+						'access_token': ACCESS_TOKEN,
 						'user_id': USER_ID,
 						'playlist_id': this.id
 					}
 			}).done(function(data) {
 				songPlaceholder.innerHTML = songTemplate(data);
-				addPlayListener(access_token);
+				addPlayListener();
 			}, false);
 
 			//play
-			playPlaylist(access_token, this.id);
+			playPlaylist(this.id);
 			window.setTimeout(function() {
-				checkCurrentPlayback(access_token);
+				checkCurrentPlayback();
 			}, 500);
 			window.clearInterval(PLAYING);
 			PLAYING = window.setInterval(function() {
-				checkCurrentPlayback(access_token);
+				checkCurrentPlayback();
 			}, 5000);
 			
 		});
 	});
 }
 
-function playPlaylist(access_token, playlist_id) {
+function playPlaylist(playlist_id) {
 	var uri = "spotify:user:" + USER_ID + ":playlist:" + playlist_id;
 
 	fetch('https://api.spotify.com/v1/me/player/play', {
@@ -177,13 +186,13 @@ function playPlaylist(access_token, playlist_id) {
 			body: JSON.stringify({ context_uri: uri }),
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${access_token}`
+				'Authorization': `Bearer ${ACCESS_TOKEN}`
 			},
 	});
 }
 
 //play song on click
-function addPlayListener(access_token) {
+function addPlayListener() {
 	//get playlist songs
 	$(".play-song").each(function() {
 		var song = this;
@@ -195,19 +204,19 @@ function addPlayListener(access_token) {
 					body: JSON.stringify({ uris: [song_uri] }),
 					headers: {
 						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${access_token}`
+						'Authorization': `Bearer ${ACCESS_TOKEN}`
 					},
 			});
 		});
 	});
 }
 
-function initializeWebPlayer(access_token) {
+function initializeWebPlayer() {
 	//initialize web player
 	window.onSpotifyWebPlaybackSDKReady = () => {
 		const player = new Spotify.Player({
 				name: 'Thingy',
-				getOAuthToken: cb => { cb(access_token); }
+				getOAuthToken: cb => { cb(ACCESS_TOKEN); }
 		});
 
 		// Error handling
@@ -234,11 +243,12 @@ function initializeWebPlayer(access_token) {
 	}
 }
 
-function checkCurrentPlayback(access_token) {	
+function checkCurrentPlayback() {	
 	$.ajax({
 			url: '/check_playback',
 			data: {
-				'access_token': access_token
+				'access_token': ACCESS_TOKEN,
+				'type': 'current'
 			}
 	}).done(function(data) {
 		if (data.is_playing) {
