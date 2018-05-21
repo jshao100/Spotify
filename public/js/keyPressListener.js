@@ -49,7 +49,7 @@ window.onkeydown = function (e) {
 	}
 	//approve
 	else if (keys[A]) {
-
+		vote(true);
 	}
 	//skip
 	else if (keys[S]) {
@@ -57,7 +57,7 @@ window.onkeydown = function (e) {
 	}
 	//decline
 	else if (keys[D]) {
-
+		vote(false);
 	}
 };
 

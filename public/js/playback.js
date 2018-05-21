@@ -69,3 +69,62 @@ function playSeek(fwd) {
 		}
 	})
 }
+
+function vote(type) {
+	//get current song
+	$.ajax({
+			url: '/check_playback',
+			data: {
+				'access_token': ACCESS_TOKEN,
+				'type': 'vote'
+			}
+	}).done(function(data) {
+		if (data.is_playing) { //get current song
+			moveSong(data.song_id, type);
+		}
+	});
+}
+
+function moveSong(song_id, approve) {
+	//get + playlist
+	var move_to = $(".bad-playlist").attr("id");
+	if (approve) {
+		move_to = $(".good-playlist").attr("id");
+	}
+
+	//get current playlist
+	var current_playlist = $(".selected").attr("id");
+
+	//if not the same, remove from current playlist and add to + playlist
+	if (move_to != current_playlist) {
+		var song_uri = {
+			"uri": "spotify:track:" + song_id
+		}
+		//remove from current
+		var url = "https://api.spotify.com/v1/users/" + USER_ID + 
+			"/playlists/" + current_playlist + "/tracks";
+
+		fetch(url, {
+			method: 'DELETE',
+			body: JSON.stringify({ tracks: [song_uri] }),
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${ACCESS_TOKEN}`
+			},
+		});
+		playNext();
+		$("#"+song_id).parents("tr").remove();
+
+		//add to target playlist
+		url = "https://api.spotify.com/v1/users/" + USER_ID + 
+			"/playlists/" + move_to + "/tracks";
+		fetch(url, {
+			method: 'POST',
+			body: JSON.stringify({ uris: ["spotify:track:" + song_id] }),
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${ACCESS_TOKEN}`
+			},
+		});
+	}
+}

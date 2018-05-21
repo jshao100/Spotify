@@ -59,6 +59,7 @@ app.get('/login', function(req, res) {
 });
 
 app.get('/callback', function(req, res) {
+	console.log("/callback");
 
 	// your application requests refresh and access tokens
 	// after checking the state parameter
@@ -151,6 +152,8 @@ app.get('/check_playback', function(req, res) {
 		console.log('/check_playback?pause');
 	} else if (type == 'seek') {
 		console.log('/check_playback?seek');
+	} else if (type == 'vote') {
+		console.log('/check_playback?vote');
 	}
 
 	var access_token = req.query.access_token;
