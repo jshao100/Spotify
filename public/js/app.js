@@ -1,7 +1,7 @@
 $(document).foundation()
 
-
 USER_ID = -1;
+current_song_id = null;
 (function() {
 
 		/**
@@ -61,12 +61,11 @@ USER_ID = -1;
 							$('#loggedin').show();
 
 							//load playlist information
-							document.getElementById('get-playlists').click()
+							document.getElementById('get-playlists').click()	
 						}
 				});
-
 				//initialize web player
-				var player = initializeWebPlayer(access_token);
+				//var player = initializeWebPlayer(access_token);
 			} else {
 				// render initial screen
 				$('#login').show();
@@ -97,14 +96,19 @@ USER_ID = -1;
 							'user_id': USER_ID
 						}
 				}).done(function(data) {
-				playlistPlaceholder.innerHTML = playlistTemplate(data);
-				addSongListener(access_token);
+					playlistPlaceholder.innerHTML = playlistTemplate(data);
+
+					//check if any playlists are currently playing
+					checkCurrentPlayback(access_token);
+
+					//add listeners to the songs
+					addPlaylistListener(access_token);
 				})
 			}, false);
 		}
 })();
 
-function addSongListener(access_token) {
+function addPlaylistListener(access_token) {
 	//get playlist songs
 	$(".get-songs").each(function() {
 		//song 
@@ -114,11 +118,9 @@ function addSongListener(access_token) {
 
 		var playlist = this;
 		playlist.addEventListener('click', function() {
-			//remove class active and then add to clicked
-			$(".get-songs").each(function() {
-				this.className = "get-songs";
-			});
-			this.className += " active";
+			//remove class selected and then add to clicked
+			$(".selected").removeClass("selected");
+			this.className += " selected";
 
 			//remove old songs
 			var s = document.getElementById("songlist");
@@ -134,8 +136,8 @@ function addSongListener(access_token) {
 						'playlist_id': this.id
 					}
 			}).done(function(data) {
-				songPlaceholder.innerHTML = songTemplate(data);
-				addPlayListener(access_token);
+			songPlaceholder.innerHTML = songTemplate(data);
+			addPlayListener(access_token);
 			}, false);
 		});
 	});
@@ -195,4 +197,21 @@ function initializeWebPlayer(access_token) {
 		// Connect to the player!
 		player.connect();
 	}
+}
+
+function checkCurrentPlayback(access_token) {	
+	$.ajax({
+			url: '/check_playback',
+			data: {
+				'access_token': access_token
+			}
+	}).done(function(data) {
+		if (data.is_playing && data.playlist_id != null) {
+			$(".playing").removeClass("playing"); //remove all
+			document.getElementById(data.playlist_id).className += " playing"; //add class
+		}
+		if (data.is_playing) {
+			current_song_id = data.song_id;	
+		}
+	}, false);
 }

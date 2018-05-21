@@ -143,6 +143,43 @@ app.get('/refresh_token', function(req, res) {
 	});
 });
 
+app.get('/check_playback', function(req, res) {
+	console.log('/check_playback');
+
+	var access_token = req.query.access_token;
+	var options = {
+		url: 'https://api.spotify.com/v1/me/player',
+		headers: { 'Authorization': 'Bearer ' + access_token },
+		json: true
+	};
+
+	// use the access token to access the Spotify Web API
+	request.get(options, function(error, response, body) {
+		if (!error && response.statusCode == 200) {
+			var playback = {
+				"is_playing": body.is_playing,
+				"playlist_id": null,
+				"song_id": null
+			};
+
+			//is_playing
+			if (body.is_playing) {
+				if (body.context != null) { //playlist
+					var uri = body.context.uri;
+					playback.playlist_id = uri.substring(uri.lastIndexOf(":")+1, uri.length);
+				}
+
+				playback.song_id = body.item.id; //get song info anyways
+			}
+
+			res.send(playback);
+		} else {
+			console.log(error);
+			console.log(response.statusCode);
+		}
+	});
+});
+
 app.get('/get_playlists', function(req, res) {
 	console.log("/get_playlists");
 

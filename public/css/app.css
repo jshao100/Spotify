@@ -39,8 +39,13 @@
 }
 
 #playlist-left-nav a:hover,
-#playlist-left-nav a.active {
+#playlist-left-nav a.selected {
 	background-color: grey;
+	color: white;
+}
+
+#playlist-left-nav a.playing {
+	background-color: #1ed760 !important; //spotify green
 	color: white;
 }
 
